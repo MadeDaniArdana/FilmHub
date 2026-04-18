@@ -1,65 +1,140 @@
-import Image from "next/image";
+import HeroSlider from '@/components/movie/HeroSlider';
+import MovieRow from '@/components/movie/MovieRow';
+import GenreFilterRow from '@/components/movie/GenreFilterRow';
+import {
+  getTrending,
+  getNowPlaying,
+  getPopular,
+  getTopRated,
+  getGenres,
+  getMoviesByGenre,
+} from '@/lib/tmdb';
 
-export default function Home() {
+export default async function Home() {
+  // Fetch all data in parallel
+  const [
+    trendingWeek,
+    trendingDay,
+    nowPlaying,
+    popular,
+    topRated,
+    genreList,
+    action,
+    horror,
+    sciFi,
+    romance,
+    animation,
+  ] = await Promise.all([
+    getTrending('week'),
+    getTrending('day'),
+    getNowPlaying(),
+    getPopular(),
+    getTopRated(),
+    getGenres(),
+    getMoviesByGenre(28),   // Action
+    getMoviesByGenre(27),   // Horror
+    getMoviesByGenre(878),  // Science Fiction
+    getMoviesByGenre(10749),// Romance
+    getMoviesByGenre(16),   // Animation
+  ]);
+
+  const heroMovies = trendingWeek.results.slice(0, 6);
+
+  // Featured genre IDs to show as tabs (ordered by popularity preference)
+  const featuredGenreIds = [28, 35, 18, 27, 878, 10749, 16, 53, 12, 80, 14, 36];
+  const filteredGenres = genreList.genres.filter((g) =>
+    featuredGenreIds.includes(g.id)
+  );
+  // Sort genres in the preferred order
+  const sortedGenres = filteredGenres.sort(
+    (a, b) => featuredGenreIds.indexOf(a.id) - featuredGenreIds.indexOf(b.id)
+  );
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="w-full bg-[#111125] min-h-screen">
+      {/* Hero Section */}
+      <HeroSlider movies={heroMovies} />
+
+      {/* Netflix Style Rows Container */}
+      <div className="pb-24 -mt-10 md:-mt-24 relative z-20 bg-gradient-to-t from-[#111125] via-[#111125] via-80% to-transparent pt-10">
+
+        {/* Row 1: Trending Today */}
+        <MovieRow
+          title="Trending Today"
+          movies={trendingDay.results}
+          viewAllLink="/trending?time=day"
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+
+        {/* Row 2: In Theaters */}
+        <MovieRow
+          title="In Theaters Now"
+          movies={nowPlaying.results}
+          viewAllLink="/discover?type=movie&now_playing=true"
+        />
+
+        {/* Row 3: Genre Filter (Interactive) */}
+        <GenreFilterRow
+          genres={sortedGenres}
+          initialGenreId={28}
+          initialMovies={action.results}
+        />
+
+        {/* Row 4: Popular on FilmHub */}
+        <MovieRow
+          title="Popular on FilmHub"
+          movies={popular.results}
+          viewAllLink="/discover?type=movie&sort=popular"
+        />
+
+        {/* Row 5: Critically Acclaimed */}
+        <MovieRow
+          title="Critically Acclaimed"
+          movies={topRated.results}
+          viewAllLink="/discover?type=movie&sort=top_rated"
+        />
+
+        {/* Row 6: Action Blockbusters */}
+        <MovieRow
+          title="Action Blockbusters"
+          movies={action.results}
+          viewAllLink="/discover?type=movie&genre=28"
+        />
+
+        {/* Row 7: Spine-Chilling Horror */}
+        <MovieRow
+          title="Spine-Chilling Horror"
+          movies={horror.results}
+          viewAllLink="/discover?type=movie&genre=27"
+        />
+
+        {/* Row 8: Science Fiction */}
+        <MovieRow
+          title="Sci-Fi Universe"
+          movies={sciFi.results}
+          viewAllLink="/discover?type=movie&genre=878"
+        />
+
+        {/* Row 9: Romantic Films */}
+        <MovieRow
+          title="Love Stories"
+          movies={romance.results}
+          viewAllLink="/discover?type=movie&genre=10749"
+        />
+
+        {/* Row 10: Animation */}
+        <MovieRow
+          title="Animated Worlds"
+          movies={animation.results}
+          viewAllLink="/discover?type=movie&genre=16"
+        />
+
+        {/* Row 11: Trending This Week */}
+        <MovieRow
+          title="Trending This Week"
+          movies={trendingWeek.results.slice(6)}
+          viewAllLink="/trending?time=week"
+        />
+      </div>
     </div>
   );
 }
