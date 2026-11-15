@@ -4,7 +4,8 @@ import { getMovieDetail, getMovieCredits, getMovieRecommendations, getImageUrl, 
 import MovieCard from '@/components/movie/MovieCard';
 import AddToWatchlistButton from '@/components/movie/AddToWatchlistButton';
 import TrailerButton from '@/components/movie/TrailerButton';
-import { Star } from 'lucide-react';
+import Footer from '@/components/layout/Footer';
+import { Star, Sparkles } from 'lucide-react';
 
 interface MoviePageProps {
   params: Promise<{ id: string }>;
@@ -14,7 +15,6 @@ export default async function MoviePage({ params }: MoviePageProps) {
   const resolvedParams = await params;
   const id = resolvedParams.id;
   
-  // Fetch details, credits, and recommendations in parallel
   // Fetch details, credits, recommendations, and videos in parallel
   const [movie, credits, recommendations, videosData] = await Promise.all([
     getMovieDetail(id),
@@ -36,64 +36,75 @@ export default async function MoviePage({ params }: MoviePageProps) {
   const topCast = credits.cast.slice(0, 10);
 
   return (
-    <div className="w-full pb-20">
-      {/* Backdrop Section */}
-      <section className="relative w-full h-[60vh] min-h-[400px]">
+    <div className="w-full bg-[#050505] text-white min-h-screen relative overflow-x-hidden selection:bg-[#E50914] selection:text-white pb-16">
+      {/* Ambient Red Glows */}
+      <div className="pointer-events-none fixed top-[40%] -left-32 w-96 h-96 rounded-full bg-red-900/20 blur-[130px] z-0" />
+      <div className="pointer-events-none fixed bottom-0 right-0 w-[420px] h-[320px] rounded-full bg-red-900/20 blur-[140px] z-0" />
+
+      {/* Backdrop Section with 3-Directional Vignette Mask */}
+      <section className="relative w-full h-[620px] overflow-hidden">
         <div className="absolute inset-0 z-0">
           <Image 
             src={getImageUrl(movie.backdrop_path, 'original')}
             alt={movie.title}
             fill
             priority
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-right-top scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/80 to-transparent"></div>
-          <div className="absolute inset-0 bg-surface/30"></div>
+          {/* Overlapping Vignettes */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-[#050505]/75 to-transparent w-[75%]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/90 via-transparent to-transparent h-32" />
         </div>
       </section>
 
       {/* Content Section */}
-      <section className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 -mt-32 md:-mt-48 flex flex-col md:flex-row gap-8 md:gap-12">
-        {/* Poster */}
-        <div className="shrink-0 w-48 md:w-72 mx-auto md:mx-0 rounded-2xl overflow-hidden shadow-[0_20px_40px_rgba(0,0,0,0.5)] border border-white/10 relative z-20">
+      <section className="relative z-10 max-w-6xl mx-auto px-8 -mt-64 md:-mt-80 flex flex-col md:flex-row gap-8 md:gap-12 items-start">
+        {/* Poster Card (2:3 aspect ratio, rounded-xl) */}
+        <div className="shrink-0 w-52 md:w-72 mx-auto md:mx-0 rounded-xl overflow-hidden shadow-2xl border border-zinc-800/80 relative z-20 aspect-[2/3] bg-zinc-900">
           <Image 
             src={getImageUrl(movie.poster_path, 'w500')}
             alt={movie.title}
-            width={300}
-            height={450}
-            className="w-full h-auto object-cover"
+            fill
+            className="object-cover"
             priority
           />
         </div>
 
-        {/* Info */}
-        <div className="flex-grow pt-4 md:pt-12 text-center md:text-left">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-headline font-extrabold text-white tracking-tight mb-2 drop-shadow-md">
+        {/* Info Column */}
+        <div className="flex-grow pt-2 md:pt-14 text-center md:text-left space-y-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-400">
+            {movie.status || 'RELEASED'} • {formatRuntime(movie.runtime)}
+          </p>
+
+          <h1 className="text-4xl md:text-5xl lg:text-[54px] font-extrabold text-white tracking-tight leading-tight drop-shadow-md">
             {movie.title}
           </h1>
+
           {movie.tagline && (
-            <p className="text-primary italic mb-4 font-medium text-lg">"{movie.tagline}"</p>
+            <p className="text-zinc-400 italic text-base">"{movie.tagline}"</p>
           )}
 
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm font-label text-on-surface-variant mb-8">
-            <span className="flex items-center gap-1 text-tertiary font-bold bg-surface/50 px-2 py-1 rounded backdrop-blur">
-              <Star size={18} fill="currentColor" />
-              {movie.vote_average?.toFixed(1) || 'NR'}
+          {/* Rating & Metadata Cluster */}
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-xs text-zinc-300">
+            <span className="flex items-center space-x-1.5 font-bold text-white bg-zinc-900/90 border border-zinc-800 px-2.5 py-1 rounded-full">
+              <Star size={14} className="fill-amber-400 text-amber-400" />
+              <span>{movie.vote_average?.toFixed(1) || 'NR'}</span>
             </span>
+            <span className="text-zinc-500">•</span>
             <span>{releaseYear}</span>
-            <span>•</span>
-            <span>{formatRuntime(movie.runtime)}</span>
-            <span>•</span>
-            <div className="flex flex-wrap gap-2">
+            <span className="text-zinc-500">•</span>
+            <div className="flex flex-wrap gap-1.5">
               {movie.genres.map(g => (
-                <span key={g.id} className="bg-surface-container-highest px-2 py-1 rounded text-xs uppercase tracking-wider text-on-surface">
+                <span key={g.id} className="bg-zinc-800/90 text-zinc-300 px-3 py-0.5 rounded-full text-[11px] font-medium">
                   {g.name}
                 </span>
               ))}
             </div>
           </div>
 
-          <div className="flex flex-wrap justify-center md:justify-start gap-4 mb-10">
+          {/* CTAs */}
+          <div className="flex flex-wrap justify-center md:justify-start items-center gap-4 pt-3">
             <TrailerButton videoId={videoId} />
             <AddToWatchlistButton 
               movieId={movie.id}
@@ -102,9 +113,10 @@ export default async function MoviePage({ params }: MoviePageProps) {
             />
           </div>
 
-          <div className="max-w-3xl">
-            <h3 className="text-xl font-headline font-bold text-white mb-3">Overview</h3>
-            <p className="text-on-surface/90 text-lg leading-relaxed mb-8">
+          {/* Overview */}
+          <div className="pt-4 max-w-2xl">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">Overview</h3>
+            <p className="text-zinc-300 text-sm md:text-[15px] leading-relaxed">
               {movie.overview}
             </p>
           </div>
@@ -113,24 +125,24 @@ export default async function MoviePage({ params }: MoviePageProps) {
 
       {/* Cast Section */}
       {topCast.length > 0 && (
-        <section className="max-w-7xl mx-auto px-6 md:px-12 pt-16">
-          <h2 className="text-2xl md:text-3xl font-headline font-bold text-white tracking-tight mb-8">Top Cast</h2>
-          <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x">
+        <section className="relative z-10 max-w-6xl mx-auto px-8 pt-16">
+          <div className="flex items-center space-x-3 border-b border-zinc-800/90 pb-3 mb-6">
+            <h2 className="text-lg font-bold text-white">Top Cast</h2>
+          </div>
+          <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4">
             {topCast.map(actor => (
-              <div key={actor.id} className="w-32 md:w-40 shrink-0 snap-start flex flex-col gap-3">
-                <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden bg-surface-container shadow-lg border border-white/5">
+              <div key={actor.id} className="w-28 md:w-32 shrink-0 flex flex-col items-center text-center group">
+                <div className="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden bg-zinc-900 shadow-lg border border-zinc-800/80 mb-2">
                   <Image 
                     src={getImageUrl(actor.profile_path, 'w300')}
                     alt={actor.name}
-                    width={160}
-                    height={160}
-                    className="w-full h-full object-cover"
+                    width={112}
+                    height={112}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
-                <div className="text-center">
-                  <h4 className="font-bold text-white text-sm line-clamp-1">{actor.name}</h4>
-                  <p className="text-on-surface-variant text-xs line-clamp-2 mt-1">{actor.character}</p>
-                </div>
+                <h4 className="font-semibold text-white text-xs line-clamp-1">{actor.name}</h4>
+                <p className="text-zinc-400 text-[10px] line-clamp-1 mt-0.5">{actor.character}</p>
               </div>
             ))}
           </div>
@@ -139,15 +151,20 @@ export default async function MoviePage({ params }: MoviePageProps) {
 
       {/* Recommendations Section */}
       {recommendations.results.length > 0 && (
-        <section className="max-w-7xl mx-auto px-6 md:px-12 py-16">
-          <h2 className="text-2xl md:text-3xl font-headline font-bold text-white tracking-tight mb-8">You Might Also Like</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-            {recommendations.results.slice(0, 5).map(movie => (
-              <MovieCard key={movie.id} movie={movie} />
+        <section className="relative z-10 max-w-6xl mx-auto px-8 pt-12">
+          <div className="flex items-center space-x-3 border-b border-zinc-800/90 pb-3 mb-6">
+            <h2 className="text-lg font-bold text-white">More Like This</h2>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-5 items-start">
+            {recommendations.results.slice(0, 5).map(m => (
+              <MovieCard key={m.id} movie={m} />
             ))}
           </div>
         </section>
       )}
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

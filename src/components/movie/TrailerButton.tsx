@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Play } from 'lucide-react';
 import TrailerModal from './TrailerModal';
 import { useSearchParams } from 'next/navigation';
+import { useMovieTheme } from '@/context/MovieThemeContext';
 
 interface TrailerButtonProps {
   videoId: string | null;
@@ -13,9 +14,9 @@ interface TrailerButtonProps {
 export default function TrailerButton({ videoId, className }: TrailerButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const searchParams = useSearchParams();
+  const { theme } = useMovieTheme();
 
   useEffect(() => {
-    // Automatically open trailer if URL has ?trailer=true
     if (searchParams.get('trailer') === 'true' && videoId) {
       setIsOpen(true);
     }
@@ -23,9 +24,9 @@ export default function TrailerButton({ videoId, className }: TrailerButtonProps
 
   if (!videoId) {
     return (
-      <button disabled className={`bg-gradient-to-br from-gray-600 to-gray-800 text-white/50 font-label font-bold px-8 py-3 rounded-lg flex items-center gap-2 cursor-not-allowed ${className || ''}`}>
-        <Play size={20} fill="currentColor" />
-        No Trailer
+      <button disabled className={`bg-zinc-800 text-zinc-500 text-[11px] font-bold uppercase tracking-wider px-5 py-2.5 rounded-full flex items-center space-x-2 cursor-not-allowed ${className || ''}`}>
+        <Play size={14} fill="currentColor" />
+        <span>NO TRAILER</span>
       </button>
     );
   }
@@ -34,10 +35,14 @@ export default function TrailerButton({ videoId, className }: TrailerButtonProps
     <>
       <button 
         onClick={() => setIsOpen(true)}
-        className={`bg-gradient-to-br from-primary to-primary-container text-white font-label font-bold px-8 py-3 rounded-lg flex items-center gap-2 hover:brightness-110 shadow-[0_0_15px_rgba(255,178,183,0.3)] transition-all ${className || ''}`}
+        className={`text-white text-[11px] font-bold uppercase tracking-wider px-6 py-2.5 rounded-full flex items-center space-x-2 transition-all duration-300 shadow-lg hover:scale-105 active:scale-95 cursor-pointer ${className || ''}`}
+        style={{
+          backgroundColor: theme.primary,
+          boxShadow: `0 8px 24px -4px ${theme.glow}`,
+        }}
       >
-        <Play size={20} fill="currentColor" />
-        Watch Trailer
+        <Play size={14} fill="white" className="text-white" />
+        <span>WATCH TRAILER</span>
       </button>
 
       <TrailerModal 

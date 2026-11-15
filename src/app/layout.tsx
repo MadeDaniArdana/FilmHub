@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Navbar from "@/components/layout/Navbar";
 import BottomNav from "@/components/layout/BottomNav";
+import { MovieThemeProvider } from "@/context/MovieThemeContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "FilmHub - Premium Cinema",
-  description: "Platform web modern untuk eksplorasi, pencarian, dan rekomendasi film.",
+  title: "FilmHub — Cinematic Streaming Experience",
+  description: "Platform web modern untuk eksplorasi film dengan adaptive color themes.",
 };
 
 export default function RootLayout({
@@ -15,12 +16,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className="bg-surface text-on-surface font-body antialiased selection:bg-primary-container selection:text-white min-h-screen pb-20 md:pb-0 flex flex-col">
-        <Navbar />
-        <main className="w-full flex-grow mt-20 md:mt-0">
-          {children}
-        </main>
-        <BottomNav />
+      <body className="bg-[#050505] text-white font-sans antialiased selection:bg-[#E50914] selection:text-white min-h-screen overflow-x-hidden relative flex flex-col">
+        <MovieThemeProvider>
+          <Navbar />
+          <main className="w-full flex-grow">
+            {children}
+          </main>
+          <BottomNav />
+        </MovieThemeProvider>
       </body>
     </html>
   );
